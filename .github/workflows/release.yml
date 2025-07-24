@@ -1,0 +1,119 @@
+name: Build and Release Dotfiles
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get commit SHA
+      id: vars
+      run: |
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "sha_full=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Create archive
+      run: |
+        mkdir -p release
+        
+        # Copy all files except .git and .github
+        rsync -av --exclude='.git' --exclude='.github' --exclude='release' . release/dotfiles/
+        
+        # Create tar.gz archive
+        cd release
+        tar -czf dotfiles-${{ steps.vars.outputs.sha_short }}.tar.gz dotfiles/
+        
+        # Create zip archive  
+        zip -r dotfiles-${{ steps.vars.outputs.sha_short }}.zip dotfiles/
+        
+        # List contents for verification
+        echo "Archive contents:"
+        tar -tzf dotfiles-${{ steps.vars.outputs.sha_short }}.tar.gz
+
+    - name: Test installation script
+      run: |
+        # Basic syntax check
+        bash -n install.sh
+        echo "✅ install.sh syntax check passed"
+        
+        # Check if configs exist
+        if [ ! -f "configs/.zshrc" ]; then
+          echo "❌ configs/.zshrc not found"
+          exit 1
+        fi
+        
+        if [ ! -f "configs/.nanorc" ]; then
+          echo "❌ configs/.nanorc not found"
+          exit 1
+        fi
+        
+        echo "✅ All config files found"
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        cat > release_notes.md << EOF
+        # Dotfiles Release - \`${{ steps.vars.outputs.sha_short }}\`
+        
+        **Commit**: \`${{ steps.vars.outputs.sha_full }}\`
+        **Date**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+        
+        ## 📦 What's included:
+        - Zsh configuration with Powerlevel10k theme
+        - Nano configuration with syntax highlighting
+        - Automated installation script
+        - zsh-autosuggestions and zsh-syntax-highlighting plugins
+        
+        ## 🚀 Quick install:
+        \`\`\`bash
+        curl -L https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.sha_short }}/dotfiles-${{ steps.vars.outputs.sha_short }}.tar.gz | tar -xz
+        cd dotfiles
+        chmod +x install.sh
+        ./install.sh
+        \`\`\`
+        
+        ## 📋 Files:
+        - \`install.sh\` - Installation script
+        - \`configs/.zshrc\` - Zsh configuration
+        - \`configs/.nanorc\` - Nano configuration
+        - \`README.md\` - Documentation
+        
+        ---
+        *Generated automatically from commit ${{ steps.vars.outputs.sha_short }}*
+        EOF
+
+    - name: Create Release (on main push only)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.vars.outputs.sha_short }}
+        name: "Release ${{ steps.vars.outputs.sha_short }}"
+        body_path: release_notes.md
+        files: |
+          release/dotfiles-${{ steps.vars.outputs.sha_short }}.tar.gz
+          release/dotfiles-${{ steps.vars.outputs.sha_short }}.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dotfiles-${{ steps.vars.outputs.sha_short }}
+        path: |
+          release/dotfiles-${{ steps.vars.outputs.sha_short }}.tar.gz
+          release/dotfiles-${{ steps.vars.outputs.sha_short }}.zip
+        retention-days: 30
