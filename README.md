@@ -13,7 +13,7 @@ Quick development environment setup with Zsh, Powerlevel10k, enhanced Nano, and 
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/.dotfiles
+git clone https://github.com/nsvk13/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Run auto-installer
