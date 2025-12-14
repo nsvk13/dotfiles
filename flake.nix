@@ -1,22 +1,28 @@
 {
-  description = "Rust dev shell (fenix)";
+  description = "NixOS configuration with Home Manager";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-    fenix.url = "github:nix-community/fenix";
+    
+    home-manager = {
+      url = "github:nix-community/home-manager/release-24.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, fenix }:
-    let
+  outputs = { self, nixpkgs, home-manager }: {
+    nixosConfigurations.workmachine = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
-    in {
-      devShells.${system}.default = pkgs.mkShell {
-        packages = [
-          fenix.packages.${system}.complete.toolchain
-          pkgs.pkg-config
-          pkgs.openssl
-        ];
-      };
+      modules = [
+        ./hosts/workmachine/configuration.nix
+        
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.users.nsvk13 = import ./home/nsvk13/home.nix;
+        }
+      ];
     };
+  };
 }
