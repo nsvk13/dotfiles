@@ -27,23 +27,24 @@
       ];
 
       general = {
-        gaps_in = 5;
-        gaps_out = 10;
+        gaps_in = 6;
+        gaps_out = 14;
         border_size = 2;
         "col.active_border" = "rgba(89b4faee)";
+        "col.inactive_border" = "rgb(45475a)";
       };
 
       decoration = {
-        rounding = 10;
-        blur.enabled = true;
+        rounding = 12;
+        blur = {
+          enabled = true;
+          size = 8;
+          passes = 2;
+        };
       };
 
       animations = {
         enabled = true;
-        animation = [
-          "windows, 1, 5, default"
-          "fade, 1, 5, default"
-        ];
       };
     };
   };

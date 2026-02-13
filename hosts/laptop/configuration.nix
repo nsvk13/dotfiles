@@ -15,7 +15,7 @@
       enable = true;
       device = "nodev";
       efiSupport = true;
-      useOSProber = true;  # Найдёт Windows
+      useOSProber = true;
     };
     efi.canTouchEfiVariables = true;
   };
@@ -25,6 +25,14 @@
     hostName = "nixos-laptop";
     networkmanager.enable = true;
   };
+
+  # Display Manager + Auto Hyprland
+  services.displayManager.gdm.enable = true;
+
+  services.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.user = "nsvk13";
+
+  programs.hyprland.enable = true;
 
   # Time & Locale
   time.timeZone = "Europe/Moscow";
@@ -41,6 +49,14 @@
   programs = {
     zsh.enable = true;
     amnezia-vpn.enable = true;
+  };
+
+  # PipeWire (если вдруг не в модулях)
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
   };
 
   # Enable flakes

@@ -7,6 +7,7 @@
     ./programs/zsh.nix
     ./programs/terminal.nix
     ./programs/git.nix
+    ./programs/waybar.nix
   ];
 
   home.username = "nsvk13";
