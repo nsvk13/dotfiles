@@ -27,10 +27,23 @@
 
   # Display Manager + Desktop Environments (X11 only)
   services.xserver.enable = true;
+  services.xserver.xkb = {
+    layout = "us,ru";
+    options = "grp:alt_shift_toggle";
+  };
+  console.useXkbConfig = true;
 
   services.displayManager.gdm = {
     enable = true;
     wayland = false;
+  };
+
+  services.displayManager = {
+    defaultSession = "gnome";
+    autoLogin = {
+      enable = true;
+      user = "nsvk13";
+    };
   };
 
   services.desktopManager = {
@@ -42,20 +55,17 @@
   time.timeZone = "Europe/Moscow";
   i18n.defaultLocale = "ru_RU.UTF-8";
 
-  # User
   users.users.nsvk13 = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "docker" "video" ];
     shell = pkgs.zsh;
   };
 
-  # Programs
   programs = {
     zsh.enable = true;
     amnezia-vpn.enable = true;
   };
 
-  # PipeWire (если вдруг не в модулях)
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -63,7 +73,6 @@
     pulse.enable = true;
   };
 
-  # Enable flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   system.stateVersion = "24.11";
