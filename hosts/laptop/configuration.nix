@@ -4,7 +4,6 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/nvidia.nix
-    ../../modules/hyprland.nix
     ../../modules/development.nix
     ../../modules/applications.nix
   ];
@@ -26,13 +25,18 @@
     networkmanager.enable = true;
   };
 
-  # Display Manager + Auto Hyprland
-  services.displayManager.gdm.enable = true;
+  # Display Manager + Desktop Environments (X11 only)
+  services.xserver.enable = true;
 
-  services.displayManager.autoLogin.enable = true;
-  services.displayManager.autoLogin.user = "nsvk13";
+  services.displayManager.gdm = {
+    enable = true;
+    wayland = false;
+  };
 
-  programs.hyprland.enable = true;
+  services.desktopManager = {
+    plasma6.enable = true;
+    gnome.enable = true;
+  };
 
   # Time & Locale
   time.timeZone = "Europe/Moscow";
