@@ -7,6 +7,7 @@
 
     # VPN tools
     wireguard-tools
+    amnezia-vpn
 
     # Development
     vscode

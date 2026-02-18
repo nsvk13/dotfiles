@@ -13,7 +13,7 @@
 
   # Fonts
   home.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    nerd-fonts.jetbrains-mono
   ];
 
   # GTK theme
@@ -21,9 +21,7 @@
     enable = true;
     theme = {
       name = "Catppuccin-Mocha-Standard-Blue-Dark";
-      package = pkgs.catppuccin-gtk.override {
-        variant = "mocha";
-      };
+      package = pkgs.catppuccin-gtk;
     };
   };
 

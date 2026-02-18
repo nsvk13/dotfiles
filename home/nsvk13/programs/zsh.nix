@@ -5,7 +5,7 @@
     enable = true;
     enableCompletion = true;
     syntaxHighlighting.enable = true;
-    
+
     shellAliases = {
       ll = "eza -la";
       rebuild = "sudo nixos-rebuild switch --flake ~/.dotfiles#laptop";

@@ -25,7 +25,7 @@
     networkmanager.enable = true;
   };
 
-  # Display Manager + Desktop Environments (X11 only)
+  # Display Manager + Desktop Environment
   services.xserver.enable = true;
   services.xserver.xkb = {
     layout = "us,ru";
@@ -46,10 +46,7 @@
     };
   };
 
-  services.desktopManager = {
-    plasma6.enable = true;
-    gnome.enable = true;
-  };
+  services.desktopManager.gnome.enable = true;
 
   # Time & Locale
   time.timeZone = "Europe/Moscow";
@@ -61,10 +58,7 @@
     shell = pkgs.zsh;
   };
 
-  programs = {
-    zsh.enable = true;
-    amnezia-vpn.enable = true;
-  };
+  programs.zsh.enable = true;
 
   security.rtkit.enable = true;
   services.pipewire = {
