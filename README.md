@@ -1,3 +1,3 @@
 # My NixOS Dotfiles 🚀
 
-*description coming soon*
+*description coming soon*~

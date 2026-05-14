@@ -33,20 +33,20 @@
   };
   console.useXkbConfig = true;
 
-  services.displayManager.gdm = {
+  services.displayManager.sddm = {
     enable = true;
-    wayland = false;
+    wayland.enable = false;
   };
 
   services.displayManager = {
-    defaultSession = "gnome";
+    defaultSession = "plasmax11";
     autoLogin = {
       enable = true;
       user = "nsvk13";
     };
   };
 
-  services.desktopManager.gnome.enable = true;
+  services.desktopManager.plasma6.enable = true;
 
   # Time & Locale
   time.timeZone = "Europe/Moscow";
