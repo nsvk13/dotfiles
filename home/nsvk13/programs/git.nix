@@ -1,12 +1,14 @@
-{ config, pkgs, ... }:
+{ ... }:
 
 {
   programs.git = {
     enable = true;
-    userName = "nsvk13";
-    userEmail = "nsvkdev@gmail.com";
 
-    extraConfig = {
+    settings = {
+      user = {
+        name = "nsvk13";
+        email = "nsvkdev@gmail.com";
+      };
       init.defaultBranch = "main";
       pull.rebase = true;
     };
