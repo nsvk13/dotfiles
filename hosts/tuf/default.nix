@@ -22,14 +22,14 @@ let
   # off the GPU painting your screen:
   #
   #   1. set muxDiscrete = true here
-  #   2. sudo nixos-rebuild switch --flake /home/nsvk13/Someone/dotfiles#tuf   #        --option substituters "https://cache.nixos.org"
-  #   3. asusctl armoury set gpu_mux_mode 0
+  #   2. sudo nixos-rebuild switch --flake /home/nsvk13/Someone/dotfiles#tuf
+  #   3. asusctl armoury set gpu_mux_mode 0   (no root needed, it goes via asusd)
   #   4. reboot
   #
   # To go back, reverse it: gpu_mux_mode 1, set this false, rebuild, reboot. If a
   # reboot ever lands on a black panel, the TTYs still work — Ctrl+Alt+F2, log in,
   # `asusctl armoury set gpu_mux_mode 1`, reboot.
-  muxDiscrete = false;
+  muxDiscrete = true;
 
   # Writes `early_stop` on every port of the hub whose syspath is $1.
   usbPortEarlyStop = pkgs.writeShellScript "usb-port-early-stop" ''
@@ -119,8 +119,10 @@ in
   '';
 
   # driftwm — trackpad-first infinite-canvas Wayland compositor. The NixOS module
-  # registers a "driftwm" session in SDDM; the iGPU that drives the panel renders it at
-  # full refresh. Per-user config is in home-manager. Plasma stays the default session.
+  # registers a "driftwm" session in SDDM. Which GPU renders it follows muxDiscrete
+  # above: the AMD 680M in Optimus mode, the RTX 4060 in discrete mode (which is the
+  # whole point — it is what lets driftwm see the HDMI output at all). Per-user config
+  # is in home-manager. Plasma stays the default session.
   programs.driftwm.enable = true;
 
   # Installed with 24.11 — never bump this, it is not "the NixOS version".
