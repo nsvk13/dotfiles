@@ -66,6 +66,18 @@ in
       # MUX mode (card2, nvidia) and eDP-1 in Optimus mode (card1, amdgpu). An entry
       # for an absent output is simply unused, so this survives flipping muxDiscrete
       # in hosts/tuf/default.nix either way.
+      # Background. "tile" repeats the image across the canvas and pans with it, so
+      # the infinite canvas stays legible as you move; mirror_tile reflects it in 2x2
+      # blocks so a non-seamless photo tiles without visible seams. Picked over
+      # "wallpaper" (one image pinned to the viewport, like a normal desktop) because
+      # the source is 736x413 and would be visibly soft stretched to 1920x1080 —
+      # switch the type if you get a higher-resolution image.
+      background = {
+        type = "tile";
+        path = "/home/nsvk13/Изображения/wallpaper.jpg";
+        mirror_tile = true;
+      };
+
       outputs = [
         {
           name = "eDP-1";
