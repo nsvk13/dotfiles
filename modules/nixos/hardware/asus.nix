@@ -5,15 +5,31 @@
 { config, pkgs, ... }:
 
 {
-  # NOTE: we deliberately do NOT set boot.kernelPackages = pkgs.linuxPackages_latest here,
-  # even though asus-linux.org recommends a recent kernel for the asus-wmi / amdgpu fixes.
-  # linuxPackages_latest (7.3.1) outpaces nvidia-open 595.71.05: the out-of-tree module
-  # fails to compile (implicit declaration of `strncpy`). The 26.05 default (6.18.60) gives
-  # us asus-wmi / asus-nb-wmi — enough for asusd, backlight, fan curves and the hotkeys —
-  # and builds nvidia fine. What it does NOT have is `asus-armoury`, still not upstreamed,
-  # so ROG Control Center logs an error and its GPU / System pages stay inert. That is the
-  # price of a kernel the nvidia module can build against. Revisit only after confirming
-  # the nvidia release in nixpkgs supports the kernel you are moving to.
+  # Kernel comes from the nixpkgs-unstable overlay, not from 26.05, and the reason is
+  # `asus-armoury`: the new ASUS platform driver ROG Control Center wants. It is absent
+  # from the 26.05 default kernel (6.18.60), which is why RCC banners
+  # "The asus-armoury driver is not loaded" and leaves its Armoury / GPU pages inert.
+  # It IS present in 7.3.1.
+  #
+  # Plain `pkgs.linuxPackages_latest` does not work, even though 26.05 also calls it
+  # 7.3.1: that channel pairs it with nvidia-open 595.71.05, which will not compile
+  # against it —
+  #
+  #   nvidia/os-interface.c: implicit declaration of function 'strncpy'
+  #   +++ |+#include <string.h>
+  #   make[5]: *** [nvidia/os-interface.o] Error 1
+  #
+  # (confirmed by building nvidia-open-595.71.05-7.3.1 directly; it dies, and this is
+  # what blocked the original install.)
+  #
+  # nixpkgs-unstable ships nvidia-open 595.112.07, which builds against that same 7.3.1
+  # cleanly — confirmed, and prebuilt in cache.nixos.org. Pulling the kernel from the
+  # unstable overlay drags the matching driver along automatically: hardware.nvidia
+  # .package resolves through boot.kernelPackages.nvidiaPackages, so the kernel and the
+  # out-of-tree module can never drift apart. If a future unstable bump breaks the pair
+  # again, the symptom is this same compile error, and the fallback is dropping this
+  # line to return to the 26.05 kernel (losing asus-armoury again).
+  boot.kernelPackages = pkgs.unstable.linuxPackages_latest;
 
   # asusctl + asusd: keyboard backlight / aura, custom fan curves, platform & power
   # profiles, battery charge limit, panel overdrive. Installs the `asusctl` CLI and the
