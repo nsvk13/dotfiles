@@ -2,7 +2,7 @@
 # Canon: https://asus-linux.org/ and the newer https://opengamingcollective.github.io/
 # asusctl/ — the asusd daemon (asusctl) and the ROG Control Center GUI. Imported only by
 # the ASUS laptop host (tuf).
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   # Kernel comes from the nixpkgs-unstable overlay, not from 26.05, and the reason is
@@ -77,19 +77,18 @@
   # platform_profile_linked_epp = false into services.asusd.asusdConfig (/etc/asusd/
   # asusd.ron). We take the simpler path and let asusd own profiles.
 
-  # ROG Control Center, autostarted in the graphical session: the ASUS tray plus the
-  # desktop notifications on profile / charge changes. Bound to graphical-session so it
-  # comes up under both Plasma and driftwm. Set "close to tray" in its settings once and
-  # it stops popping the window on login.
-  systemd.user.services.rog-control-center = {
-    description = "ROG Control Center (ASUS tray + notifications)";
-    wantedBy = [ "graphical-session.target" ];
-    partOf = [ "graphical-session.target" ];
-    after = [ "graphical-session.target" ];
-    serviceConfig = {
-      ExecStart = "${config.services.asusd.package}/bin/rog-control-center";
-      Restart = "on-failure";
-      RestartSec = 3;
-    };
-  };
+  # ROG Control Center is NOT autostarted. It used to be a user service bound to
+  # graphical-session.target, for the ASUS tray and the profile / charge notifications.
+  # That is fine under Plasma and a disaster under driftwm, which has no panel and
+  # therefore no system tray at all:
+  #
+  #   [ERROR rog_control_center::tray] Tray unable to be initialised:
+  #   Watcher(ServiceUnknown("The name is not activatable")).
+  #   Do you have a system tray enabled?
+  #
+  # It aborts, Restart=on-failure brings it straight back, and it respawns forever.
+  # Not worth gating the unit per session: asusd is the daemon that actually applies
+  # profiles, fan curves and the charge limit, and it runs independently. The GUI is
+  # only a front-end — run `rog-control-center` by hand when you want it, or drive the
+  # same settings from the `asusctl` CLI.
 }
