@@ -1,4 +1,4 @@
-{ pkgs, user, ... }:
+{ pkgs, ... }:
 
 {
   # Plasma 6 on Wayland. The X11 session ("plasmax11") stays installed as a fallback
@@ -10,11 +10,23 @@
       enable = true;
       wayland.enable = true;
     };
+    # Pre-selects Plasma in the greeter; driftwm is one dropdown away.
     defaultSession = "plasma";
-    autoLogin = {
-      enable = true;
-      inherit user;
-    };
+
+    # NO autoLogin on purpose. With it enabled SDDM went straight into
+    # `defaultSession` on every boot and never drew the greeter, so there was no way
+    # to pick a different session — and the one path that should have worked, logging
+    # out, raced the autologin session for VT 1 and killed the greeter a second after
+    # it started:
+    #
+    #   Greeter session started successfully
+    #   Auth: sddm-helper exited with 5
+    #   Greeter stopped. SDDM::Auth::HELPER_TTY_ERROR
+    #   Jumping to VT 1
+    #
+    # which presents as a black screen with no session picker. Since this host runs
+    # two sessions (Plasma + driftwm), reaching the greeter matters more than skipping
+    # the password prompt.
   };
   services.desktopManager.plasma6.enable = true;
 
