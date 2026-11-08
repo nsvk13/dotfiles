@@ -46,6 +46,16 @@ in
     settings = {
       mod_key = "super";
       focus_follows_mouse = true;
+
+      # Keyboard layout is the compositor's job on Wayland: driftwm reads this, NOT
+      # services.xserver.xkb (that one only reaches Plasma / X). Same us,ru +
+      # alt+shift as the rest of the system, kept in sync with modules/nixos/base.nix.
+      # grp:alt_shift_toggle is an XKB-level option, so the switch works without
+      # binding driftwm's own `switch-layout` action — which is unbound by default.
+      input.keyboard = {
+        layout = "us,ru";
+        options = "grp:alt_shift_toggle";
+      };
     };
   };
 
