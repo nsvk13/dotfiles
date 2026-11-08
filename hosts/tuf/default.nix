@@ -63,7 +63,24 @@ in
       device = "nodev";
       efiSupport = true;
       useOSProber = true;
-      configurationLimit = 10;
+
+      # Three, not ten, and the ESP is why. /boot IS the Windows ESP — 196 MB, of
+      # which EFI binaries, GRUB and its font already eat ~48 MB. install-grub.pl
+      # ignores boot.loader.grub.copyKernels here and forces copying on, because
+      # /boot and /nix/store sit on different disks (nvme0n1p1 vs nvme1n1p4):
+      #
+      #   if (stat($bootPath)->dev != stat("/nix/store")->dev) { $copyKernels = 1; }
+      #
+      # So every kept generation's kernel and initrd land on the ESP. This initrd is
+      # ~64 MB and the bzImage ~15 MB, leaving room for roughly two distinct
+      # kernel/initrd pairs in ~148 MB. At 10 the ESP filled and the switch died with
+      # "No space left on device / Failed to install bootloader".
+      #
+      # Generations sharing a kernel+initrd share one copy, so 3 is usually 1-2 pairs.
+      # If this bites again, the real fix is giving /boot its own home on the ext4
+      # root and mounting the ESP at /boot/efi instead — then bootPath and the store
+      # are on one device, copying stops entirely and the limit stops mattering.
+      configurationLimit = 3;
     };
     efi.canTouchEfiVariables = true;
   };
