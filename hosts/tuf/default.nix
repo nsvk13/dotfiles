@@ -31,6 +31,29 @@ let
   # `asusctl armoury set gpu_mux_mode 1`, reboot.
   muxDiscrete = true;
 
+  # Kill the built-in panel outright, leaving the external monitor as the only
+  # display — so it is also, by default, where the canvas origin and every new
+  # window land.
+  #
+  # This is a DRM-level switch, not a driftwm one: driftwm cannot disable an output
+  # (OutputRuleFile takes exactly name / scale / transform / position / mode /
+  # focus_placement / hot_corners, and the parser is deny_unknown_fields) and it has
+  # no lid handling at all. `video=<connector>:d` tells the kernel to mark the
+  # connector disabled, which every consumer then honours.
+  #
+  # Both names again, for the same reason as the [[outputs]] entries in home.nix:
+  # the panel is eDP-2 on the dGPU and eDP-1 on the iGPU. A `video=` entry naming an
+  # absent connector is ignored.
+  #
+  # DANGER, read before taking this laptop anywhere: with this on and no external
+  # monitor plugged in, the machine boots to NO display at all. Two ways out, both
+  # work because `video=` is a kernel parameter and GRUB itself still draws on the
+  # panel:
+  #   - at the GRUB menu press `e`, delete the video=... words, Ctrl-X to boot once
+  #   - or pick an older generation from the menu
+  # The permanent fix is setting this back to false and rebuilding.
+  internalPanelOff = true;
+
   # Writes `early_stop` on every port of the hub whose syspath is $1.
   usbPortEarlyStop = pkgs.writeShellScript "usb-port-early-stop" ''
     for attr in "$1"/*-port*/early_stop; do
@@ -104,6 +127,19 @@ in
       powerManagement.finegrained = lib.mkForce false;
     })
   ];
+
+  boot.kernelParams = lib.optionals internalPanelOff [
+    "video=eDP-1:d"
+    "video=eDP-2:d"
+  ];
+
+  # Closing the lid must not suspend: with the panel off this is a desktop that
+  # happens to fold, and the external monitor keeps working either way.
+  services.logind = lib.mkIf internalPanelOff {
+    lidSwitch = "ignore";
+    lidSwitchExternalPower = "ignore";
+    lidSwitchDocked = "ignore";
+  };
 
   # Windows keeps the RTC in local time; match it so the clock doesn't jump when you
   # boot back and forth (dual boot via GRUB os-prober).
