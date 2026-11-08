@@ -56,6 +56,26 @@ in
         layout = "us,ru";
         options = "grp:alt_shift_toggle";
       };
+
+      # The internal panel is 144 Hz, but EDID's "preferred" mode is only 60 Hz when
+      # the dGPU drives it (amdgpu reported 10 modes and preferred 144; nvidia reports
+      # 2 and prefers 60), so driftwm came up at 60. "max" takes the highest
+      # resolution and then the highest refresh at it.
+      #
+      # Both connector names are listed on purpose: the panel is eDP-2 in discrete
+      # MUX mode (card2, nvidia) and eDP-1 in Optimus mode (card1, amdgpu). An entry
+      # for an absent output is simply unused, so this survives flipping muxDiscrete
+      # in hosts/tuf/default.nix either way.
+      outputs = [
+        {
+          name = "eDP-1";
+          mode = "max";
+        }
+        {
+          name = "eDP-2";
+          mode = "max";
+        }
+      ];
     };
   };
 
