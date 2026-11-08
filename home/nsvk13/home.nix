@@ -10,6 +10,10 @@ in
     ./programs/terminal.nix
     ./programs/git.nix
     ./programs/devops.nix
+    inputs.driftwm.homeModules.driftwm
+    # Must come with the driftwm module: it declares the one option home-manager's
+    # way-displays module expects every compositor to have. See the file for why.
+    ./driftwm-compat.nix
   ];
 
   home.username = "nsvk13";
@@ -37,6 +41,13 @@ in
   # driftwm per-user config. mod+Return (exec-terminal) resolves to kitty automatically.
   # Kept minimal on purpose — driftwm ships sane defaults; extend from its reference:
   # https://github.com/malbiruk/driftwm/blob/main/config.reference.toml
+  wayland.windowManager.driftwm = {
+    enable = isTuf;
+    settings = {
+      mod_key = "super";
+      focus_follows_mouse = true;
+    };
+  };
 
   programs.home-manager.enable = true;
 }
