@@ -2,6 +2,35 @@
 { inputs, lib, pkgs, ... }:
 
 let
+  # MUX mode, and it has to match the firmware or the machine black-screens.
+  #
+  # false — Optimus (gpu_mux_mode=1, the shipped default). The AMD 680M drives the
+  #   internal panel, the dGPU idles until `nvidia-offload <app>` wakes it, and the
+  #   HDMI port stays wired to the dGPU. Best battery life. Downside: the panel and
+  #   HDMI live on different GPUs, so a compositor that only opens one DRM device
+  #   sees one of them. driftwm is such a compositor — it logs
+  #     GPU candidates: ["/dev/dri/card1", "/dev/dri/card0"] / Using GPU: card1
+  #   and never enumerates HDMI-A-1. Upstream issue malbiruk/driftwm#91,
+  #   "Add multi-GPU (PRIME) support for outputs on secondary GPUs", still open.
+  #
+  # true — Discrete. The MUX routes the internal panel to the dGPU as well, so both
+  #   outputs hang off card0 and driftwm drives both. Costs battery: the 680M no
+  #   longer renders anything and the 4060 can never power down.
+  #
+  # Flipping this alone does nothing — the firmware switch is a separate, persistent
+  # setting. The order matters, because finegrained RTD3 would otherwise try to power
+  # off the GPU painting your screen:
+  #
+  #   1. set muxDiscrete = true here
+  #   2. sudo nixos-rebuild switch --flake /home/nsvk13/Someone/dotfiles#tuf   #        --option substituters "https://cache.nixos.org"
+  #   3. asusctl armoury set gpu_mux_mode 0
+  #   4. reboot
+  #
+  # To go back, reverse it: gpu_mux_mode 1, set this false, rebuild, reboot. If a
+  # reboot ever lands on a black panel, the TTYs still work — Ctrl+Alt+F2, log in,
+  # `asusctl armoury set gpu_mux_mode 1`, reboot.
+  muxDiscrete = false;
+
   # Writes `early_stop` on every port of the hub whose syspath is $1.
   usbPortEarlyStop = pkgs.writeShellScript "usb-port-early-stop" ''
     for attr in "$1"/*-port*/early_stop; do
@@ -39,11 +68,25 @@ in
     efi.canTouchEfiVariables = true;
   };
 
-  # `lspci -D | grep -E 'VGA|3D'` prints HEX, these are DECIMAL.
-  hardware.nvidia.prime = {
-    amdgpuBusId = "PCI:5@0:0:0";
-    nvidiaBusId = "PCI:1@0:0:0";
-  };
+  hardware.nvidia = lib.mkMerge [
+    {
+      # `lspci -D | grep -E 'VGA|3D'` prints HEX, these are DECIMAL.
+      prime = {
+        amdgpuBusId = "PCI:5@0:0:0";
+        nvidiaBusId = "PCI:1@0:0:0";
+      };
+    }
+
+    # In discrete mode PRIME offload is meaningless — there is nothing to offload
+    # from, the dGPU is the only thing driving a display — and finegrained power
+    # management is actively dangerous: it powers the dGPU down at idle, and that
+    # dGPU is painting the panel. Both off.
+    (lib.mkIf muxDiscrete {
+      prime.offload.enable = lib.mkForce false;
+      prime.offload.enableOffloadCmd = lib.mkForce false;
+      powerManagement.finegrained = lib.mkForce false;
+    })
+  ];
 
   # Windows keeps the RTC in local time; match it so the clock doesn't jump when you
   # boot back and forth (dual boot via GRUB os-prober).
