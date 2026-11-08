@@ -10,7 +10,6 @@
   # CAVEAT: with the proprietary NVIDIA driver a brand-new kernel can outpace the driver
   # and fail to build. If `nixos-install` dies on the nvidia module, drop this line (it
   # falls back to the default kernel) and rebuild.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # asusctl + asusd: keyboard backlight / aura, custom fan curves, platform & power
   # profiles, battery charge limit, panel overdrive. Installs the `asusctl` CLI and the

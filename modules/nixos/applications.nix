@@ -6,7 +6,8 @@
 
   environment.systemPackages = with pkgs; [
     wireguard-tools
-    vscode
+    zed-editor
+    claude-code
     discord
     telegram-desktop
   ];
