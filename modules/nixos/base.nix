@@ -41,7 +41,9 @@
   # nh = nicer nixos-rebuild + garbage collection (replaces nix.gc).
   programs.nh = {
     enable = true;
-    flake = "/home/${user}/.dotfiles";
+    # Фактический путь репозитория. Раньше здесь было ~/.dotfiles, которого на
+    # машине нет, из-за чего NH_FLAKE был битый и алиасы rebuild/update падали.
+    flake = "/home/${user}/Someone/dotfiles";
     clean = {
       enable = true;
       extraArgs = "--keep-since 7d --keep 5";

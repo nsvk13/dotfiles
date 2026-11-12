@@ -6,6 +6,8 @@
     ./programs/terminal.nix
     ./programs/git.nix
     ./programs/devops.nix
+    ./programs/cli.nix
+    ./desktop/nordic.nix
   ];
 
   home.username = "nsvk13";
