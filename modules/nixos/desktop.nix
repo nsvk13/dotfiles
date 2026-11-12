@@ -46,10 +46,31 @@
   hardware.bluetooth.enable = true;
 
   fonts.packages = with pkgs; [
+    inter # UI-шрифт Plasma и GTK; до этого был дефолтный Noto Sans 10
     nerd-fonts.jetbrains-mono
     noto-fonts
     noto-fonts-cjk-sans
     noto-fonts-color-emoji
+  ];
+
+  # Ассеты оформления. Системно, а не в home.packages, чтобы их видел и SDDM.
+  #
+  # Про nordic: используются только share/color-schemes (Nordic.colors) и
+  # share/themes (GTK 2/3/4). Его share/plasma/desktoptheme и
+  # share/plasma/look-and-feel содержат лишь metadata.desktop — формат Plasma 5,
+  # а Plasma 6 требует metadata.json, поэтому как Plasma style или global theme
+  # Nordic не загрузится. Plasma style остаётся нативным breeze-dark: он
+  # наследует системную цветовую схему, так что панели всё равно станут
+  # нордическими.
+  environment.systemPackages = with pkgs; [
+    nordic
+    papirus-icon-theme
+    bibata-cursors
+
+    # KWin-скрипт автоматического тайлинга. Включается и настраивается в
+    # home/nsvk13/desktop/nordic.nix через kwinrc; здесь только пакет, чтобы
+    # KWin нашёл его в share/kwin/scripts внутри XDG_DATA_DIRS.
+    kdePackages.krohnkite
   ];
 
   programs.firefox.enable = true;

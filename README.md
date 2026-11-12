@@ -6,7 +6,7 @@ Flake-based NixOS + home-manager config.
 
 | Host  | Machine                | GPU                          | Notes                          |
 |-------|------------------------|------------------------------|--------------------------------|
-| `tuf` | ASUS TUF Gaming A15     | Radeon 680M iGPU + RTX 4060  | ASUS ROG stack, driftwm, dual-boot |
+| `tuf` | ASUS TUF Gaming A15     | Radeon 680M iGPU + RTX 4060  | ASUS ROG stack, discrete MUX, dual-boot |
 | `m7`  | Ninkear M7             | AMD iGPU                     | plain desktop                  |
 
 Host name == flake attribute == `networking.hostName`, so `nh os switch` picks the
@@ -45,43 +45,71 @@ subcommands you'll use: `profile` (Quiet/Balanced/Performance), `aura` or `leds`
 via `asusctl` — it persists in asusd across reboots (e.g. `asusctl battery limit 80`, or
 the older `asusctl -c 80`; see `--help`).
 
-### Graphics: iGPU-primary + NVIDIA offload (kept on purpose)
+### Graphics: discrete MUX, external monitor only
 
-The internal panel is wired to the **AMD iGPU**, which renders the desktop (incl. driftwm)
-at full 165 Hz — it is far more than enough for 2D Wayland compositing. The **RTX 4060**
-sleeps in D3cold when idle (`powerManagement.finegrained`) and wakes only for what you
-offload:
+Two host-level switches in `hosts/tuf/default.nix` decide everything here, and both are
+documented in full at the top of that file — read it before flipping either.
 
-```sh
-nvidia-offload <app>     # run <app> on the dGPU (games, Blender, CUDA tools, …)
-```
+`muxDiscrete = true` routes the internal panel to the **RTX 4060** instead of the Radeon
+680M, so both outputs hang off one card. Consequences, on purpose:
 
-CUDA/ML workloads see the full 4060 this way while the desktop stays cool and quiet.
-Making NVIDIA the primary renderer (`prime.sync`) would keep the dGPU powered 24/7 (more
-heat, far shorter battery, rougher Wayland) with **no** smoothness gain for desktop work,
-so we don't. Set the panel to 165 Hz in Plasma's display settings or driftwm's `[outputs]`.
+- PRIME offload is meaningless and is force-disabled, so there is **no** `nvidia-offload`
+  command. Everything already renders on the dGPU.
+- `powerManagement.finegrained` is force-disabled too — RTD3 would otherwise power down
+  the GPU that is painting the screen.
+- It costs battery: the 680M renders nothing and the 4060 can never sleep.
+
+This was flipped for driftwm, which could only see one of the two outputs while they lived
+on separate GPUs. driftwm has since been dropped; Plasma handles both GPUs by itself, so
+Optimus (`muxDiscrete = false`, `asusctl armoury set gpu_mux_mode 1`) would work again and
+would get the battery back. It stays discrete only because nobody asked to change it back.
+
+`internalPanelOff = true` adds `video=eDP-1:d video=eDP-2:d` to the kernel command line,
+killing the built-in panel outright. The external HDMI monitor is the only display, and it
+runs at 165 Hz.
+
+> **Read before taking this laptop anywhere.** With `internalPanelOff` on and no external
+> monitor plugged in, the machine boots to no display at all. At the GRUB menu press `e`,
+> delete the `video=…` words, Ctrl-X to boot once — or pick an older generation.
 
 ### supergfxctl — intentionally NOT installed
 
-Upstream deprecated it. RTD3 offload already powers the dGPU down. Only add
-`services.supergfxd.enable` if you need VFIO GPU passthrough to a VM.
+Upstream deprecated it, and in discrete MUX mode there is nothing for it to switch.
+Only add `services.supergfxd.enable` if you need VFIO GPU passthrough to a VM.
 
-## driftwm (tuf only)
+## Desktop theming — Nordic / Minimal (plasma-manager)
 
-[driftwm](https://github.com/malbiruk/driftwm) — trackpad-first infinite-canvas Wayland
-compositor — is added as a flake input; its NixOS module registers a **driftwm** session
-in SDDM. Plasma stays the default/fallback session.
+KDE Plasma 6 is configured declaratively via
+[plasma-manager](https://github.com/nix-community/plasma-manager), wired in as a
+`home-manager.sharedModules` entry in `flake.nix`.
 
-- Per-user config: `home/nsvk13/home.nix` → `wayland.windowManager.driftwm.settings`
-  (writes `~/.config/driftwm/config.toml`, validated with `--check-config` at build).
-- Default keybinds work out of the box: `mod+Return` → kitty, `mod+d` → fuzzel,
-  Print → screenshot, brightness/volume/media keys, `mod+l` → swaylock. The helper tools
-  those binds call are installed alongside.
-- Extend from `config.reference.toml` in the driftwm repo.
+- Theme module: `home/nsvk13/desktop/nordic.nix`. Two local switches at the top:
+  `enable` (the whole theme) and `manageGtk` (whether home-manager owns the GTK bridge).
+- Assets live system-wide in `modules/nixos/desktop.nix` so SDDM sees them too:
+  `nordic`, `papirus-icon-theme`, `bibata-cursors`, plus `inter` in `fonts.packages`.
 
-> driftwm is experimental ("primarily built with AI"). Test it before daily-driving:
-> pick **driftwm** at the SDDM session menu, or run `driftwm` from a TTY. Plasma remains
-> the safe default, so a bad config can never lock you out.
+What is set: Nordic colour scheme, `breeze-dark` Plasma style, Breeze widget style and
+window decoration, Papirus-Dark icons, Bibata-Modern-Ice cursor, Inter 10 for the UI and
+JetBrainsMono Nerd Font 10 for monospace.
+
+`overrideConfig` is deliberately **false**. In that mode plasma-manager edits individual
+keys in the existing rc files instead of replacing them, and deletes nothing — so
+hand-made settings outside the module (keyboard shortcuts, the `us,ru` layout, Dolphin's
+hidden menubar, the monitor layout in `kwinoutputconfig.json`) survive untouched. Setting
+it to true would delete 38 config files on every generation.
+
+Two things Nordic cannot provide on Plasma 6: its `plasma/desktoptheme` and
+`plasma/look-and-feel` packages ship only `metadata.desktop`, the Plasma 5 format, while
+Plasma 6 requires `metadata.json`. Hence the native `breeze-dark` Plasma style, which
+inherits the system colour scheme and therefore still renders Nordic.
+
+Changes apply on the next login, not on `switch` — plasma-manager runs through an
+autostart script (`~/.local/share/plasma-manager/`).
+
+Not managed yet: panels, desktop containments and the wallpaper. The `panels` module
+unconditionally deletes `~/.config/plasma-org.kde.plasma.desktop-appletsrc`, taking the
+desktop containments and every widget config with it, so it needs a deliberate migration
+rather than a flag flip.
 
 ## ASUS troubleshooting (apply only if you hit the symptom)
 
