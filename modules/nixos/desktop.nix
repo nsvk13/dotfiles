@@ -10,7 +10,8 @@
       enable = true;
       wayland.enable = true;
     };
-    # Pre-selects Plasma in the greeter; driftwm is one dropdown away.
+    # Plasma is the only session installed now; this also pre-selects it in the
+    # greeter if another one is ever added back.
     defaultSession = "plasma";
 
     # NO autoLogin on purpose. With it enabled SDDM went straight into
@@ -24,9 +25,9 @@
     #   Greeter stopped. SDDM::Auth::HELPER_TTY_ERROR
     #   Jumping to VT 1
     #
-    # which presents as a black screen with no session picker. Since this host runs
-    # two sessions (Plasma + driftwm), reaching the greeter matters more than skipping
-    # the password prompt.
+    # which presents as a black screen with no session picker. Leaving autologin off
+    # keeps the greeter reachable — it is the only way to pick a different session, or
+    # a different user, without editing the config first.
   };
   services.desktopManager.plasma6.enable = true;
 

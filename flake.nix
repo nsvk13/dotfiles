@@ -9,12 +9,6 @@
 
     nixos-hardware.url = "github:NixOS/nixos-hardware";
 
-    # driftwm — trackpad-first infinite-canvas Wayland compositor (laptop only).
-    # Deliberately NOT following our nixpkgs: it builds against its own pinned
-    # nixos-unstable (Rust edition 2024 + fresh deps), which is what upstream tests —
-    # forcing it onto 26.05 risks the build on the machine we can't test from here.
-    driftwm.url = "github:malbiruk/driftwm";
-
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";

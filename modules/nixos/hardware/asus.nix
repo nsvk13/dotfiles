@@ -79,15 +79,16 @@
 
   # ROG Control Center is NOT autostarted. It used to be a user service bound to
   # graphical-session.target, for the ASUS tray and the profile / charge notifications.
-  # That is fine under Plasma and a disaster under driftwm, which has no panel and
-  # therefore no system tray at all:
+  # That is fine under Plasma and was a disaster under driftwm — no panel, therefore
+  # no system tray at all:
   #
   #   [ERROR rog_control_center::tray] Tray unable to be initialised:
   #   Watcher(ServiceUnknown("The name is not activatable")).
   #   Do you have a system tray enabled?
   #
-  # It aborts, Restart=on-failure brings it straight back, and it respawns forever.
-  # Not worth gating the unit per session: asusd is the daemon that actually applies
+  # It aborted, Restart=on-failure brought it straight back, and it respawned forever.
+  # driftwm is gone from this config now, so the unit could come back — but it is not
+  # worth it: asusd is the daemon that actually applies
   # profiles, fan curves and the charge limit, and it runs independently. The GUI is
   # only a front-end — run `rog-control-center` by hand when you want it, or drive the
   # same settings from the `asusctl` CLI.

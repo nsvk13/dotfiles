@@ -1,21 +1,23 @@
 # ASUS TUF Gaming A15 — AMD Ryzen (iGPU drives the internal panel) + RTX 4060 Laptop.
-{ inputs, lib, pkgs, ... }:
+{ lib, pkgs, ... }:
 
 let
   # MUX mode, and it has to match the firmware or the machine black-screens.
   #
   # false — Optimus (gpu_mux_mode=1, the shipped default). The AMD 680M drives the
   #   internal panel, the dGPU idles until `nvidia-offload <app>` wakes it, and the
-  #   HDMI port stays wired to the dGPU. Best battery life. Downside: the panel and
-  #   HDMI live on different GPUs, so a compositor that only opens one DRM device
-  #   sees one of them. driftwm is such a compositor — it logs
-  #     GPU candidates: ["/dev/dri/card1", "/dev/dri/card0"] / Using GPU: card1
-  #   and never enumerates HDMI-A-1. Upstream issue malbiruk/driftwm#91,
-  #   "Add multi-GPU (PRIME) support for outputs on secondary GPUs", still open.
+  #   HDMI port stays wired to the dGPU. Best battery life.
   #
   # true — Discrete. The MUX routes the internal panel to the dGPU as well, so both
-  #   outputs hang off card0 and driftwm drives both. Costs battery: the 680M no
-  #   longer renders anything and the 4060 can never power down.
+  #   outputs hang off one card. Costs battery: the 680M no longer renders anything
+  #   and the 4060 can never power down.
+  #
+  # HISTORY, because true is no longer the obvious choice: this was flipped for
+  # driftwm, which opens a single DRM device and so could only ever see one of the
+  # two outputs while they lived on separate GPUs (upstream malbiruk/driftwm#91).
+  # driftwm has since been dropped from this config. Plasma handles both GPUs by
+  # itself, so Optimus would work fine now and would get the battery back — this
+  # stays true only because nobody asked to change it back.
   #
   # Flipping this alone does nothing — the firmware switch is a separate, persistent
   # setting. The order matters, because finegrained RTD3 would otherwise try to power
@@ -32,18 +34,18 @@ let
   muxDiscrete = true;
 
   # Kill the built-in panel outright, leaving the external monitor as the only
-  # display — so it is also, by default, where the canvas origin and every new
-  # window land.
+  # display.
   #
-  # This is a DRM-level switch, not a driftwm one: driftwm cannot disable an output
-  # (OutputRuleFile takes exactly name / scale / transform / position / mode /
-  # focus_placement / hot_corners, and the parser is deny_unknown_fields) and it has
-  # no lid handling at all. `video=<connector>:d` tells the kernel to mark the
-  # connector disabled, which every consumer then honours.
+  # `video=<connector>:d` marks the connector disabled in the kernel, so every
+  # consumer honours it — Plasma, the TTYs, anything. That bluntness is the point:
+  # it was set while running driftwm, which had no way to disable an output of its
+  # own. Under Plasma you could equally well just switch the panel off in the
+  # display settings, which is reversible without a rebuild; this stays because it
+  # keeps the panel off at the greeter and on the consoles too.
   #
-  # Both names again, for the same reason as the [[outputs]] entries in home.nix:
-  # the panel is eDP-2 on the dGPU and eDP-1 on the iGPU. A `video=` entry naming an
-  # absent connector is ignored.
+  # Both connector names are listed: the panel is eDP-2 when the dGPU drives it and
+  # eDP-1 on the iGPU, i.e. it follows muxDiscrete above. A `video=` entry naming an
+  # absent connector is ignored, so this holds either way.
   #
   # DANGER, read before taking this laptop anywhere: with this on and no external
   # monitor plugged in, the machine boots to NO display at all. Two ways out, both
@@ -68,7 +70,6 @@ in
     ../../modules/nixos/hardware/amd.nix
     ../../modules/nixos/hardware/nvidia-prime.nix
     ../../modules/nixos/hardware/asus.nix
-    inputs.driftwm.nixosModules.driftwm
   ]
   ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix;
 
@@ -135,10 +136,10 @@ in
 
   # Closing the lid must not suspend: with the panel off this is a desktop that
   # happens to fold, and the external monitor keeps working either way.
-  services.logind = lib.mkIf internalPanelOff {
-    lidSwitch = "ignore";
-    lidSwitchExternalPower = "ignore";
-    lidSwitchDocked = "ignore";
+  services.logind.settings.Login = lib.mkIf internalPanelOff {
+    HandleLidSwitch = "ignore";
+    HandleLidSwitchExternalPower = "ignore";
+    HandleLidSwitchDocked = "ignore";
   };
 
   # Windows keeps the RTC in local time; match it so the clock doesn't jump when you
@@ -170,13 +171,6 @@ in
   services.udev.extraRules = ''
     ACTION=="add|bind", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_interface", ENV{DRIVER}=="hub", RUN+="${usbPortEarlyStop} /sys$devpath"
   '';
-
-  # driftwm — trackpad-first infinite-canvas Wayland compositor. The NixOS module
-  # registers a "driftwm" session in SDDM. Which GPU renders it follows muxDiscrete
-  # above: the AMD 680M in Optimus mode, the RTX 4060 in discrete mode (which is the
-  # whole point — it is what lets driftwm see the HDMI output at all). Per-user config
-  # is in home-manager. Plasma stays the default session.
-  programs.driftwm.enable = true;
 
   # Installed with 24.11 — never bump this, it is not "the NixOS version".
   system.stateVersion = "24.11";
