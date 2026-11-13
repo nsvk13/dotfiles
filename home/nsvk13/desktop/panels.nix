@@ -99,6 +99,25 @@
           };
         }
 
+        # Таскбар с лончерами — переехал сюда из удалённого нижнего дока.
+        # iconsOnly: только иконки, без подписей, чтобы панель не разъезжалась.
+        {
+          iconTasks = {
+            iconsOnly = true;
+            launchers = [
+              "applications:firefox.desktop"
+              # Ghostty приходит из home-manager, его .desktop лежит в
+              # /etc/profiles/per-user/nsvk13/share/applications — этот путь
+              # есть в XDG_DATA_DIRS, так что имя разрешается.
+              "applications:com.mitchellh.ghostty.desktop"
+              "applications:org.kde.dolphin.desktop"
+              "applications:dev.zed.Zed.desktop"
+              "applications:org.telegram.desktop.desktop"
+              "applications:slack.desktop"
+            ];
+          };
+        }
+
         "org.kde.plasma.panelspacer"
         {
           digitalClock = {
@@ -161,34 +180,19 @@
       ];
     }
 
-    # Нижний док на нативной панели Plasma: по центру, по размеру содержимого,
-    # уходит под окна когда они подходят вплотную.
-    {
-      location = "bottom";
-      height = 52;
-      floating = true;
-      alignment = "center";
-      lengthMode = "fit";
-      hiding = "dodgewindows";
-      opacity = "translucent";
-
-      widgets = [
-        {
-          iconTasks = {
-            iconsOnly = true;
-            launchers = [
-              "applications:firefox.desktop"
-              # Ghostty приходит из home-manager, его .desktop лежит в
-              # /etc/profiles/per-user/nsvk13/share/applications — этот путь
-              # есть в XDG_DATA_DIRS, так что имя разрешается.
-              "applications:com.mitchellh.ghostty.desktop"
-              "applications:org.kde.dolphin.desktop"
-              "applications:dev.zed.Zed.desktop"
-              "applications:org.telegram.desktop.desktop"
-            ];
-          };
-        }
-      ];
-    }
+    # НИЖНЕГО ДОКА БОЛЬШЕ НЕТ — убран осознанно.
+    #
+    # Он был отдельной плавающей панелью по центру с hiding = "dodgewindows".
+    # Именно этот режим и давал проблемы: при каждом подходе окна к низу экрана
+    # plasmashell пересчитывает геометрию панели и анимирует её уход, на Wayland
+    # это выглядит дёргано и периодически подвисает.
+    #
+    # Таскбар переехал в верхнюю панель, туда же лончеры. Одна панель вместо
+    # двух: нет второй геометрии, нет dodge-анимации, нет отдельного дока,
+    # который надо ждать.
+    #
+    # Вернуть док, если захочется: скопировать блок из git-истории этого файла
+    # (коммит feat(desktop) в ветке feat/nordic-rice) и поменять hiding на
+    # "none" — тогда он будет просто всегда виден и не станет дёргаться.
   ];
 }
