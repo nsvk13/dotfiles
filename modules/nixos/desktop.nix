@@ -67,12 +67,30 @@
   # Руками лечилось явным вызовом ConnectProfile по UUID A2DP Sink; настройки
   # ниже делают это поведением по умолчанию. Проверялось на Logitech G435.
   services.pipewire.wireplumber.extraConfig."51-bluez-prefer-a2dp" = {
+    # bluez5.auto-connect — свойство УСТРОЙСТВА, а не монитора, поэтому задаётся
+    # правилом, а не в monitor.bluez.properties. Видно по bluez.lua: секция
+    # properties уходит в SpaDevice("api.bluez5.enum.dbus", …) — то есть в
+    # монитор перечисления (строка 398), а до самого устройства свойства
+    # доезжают только через match_rules_update_properties(config.rules, …)
+    # (строки 367-370). В libspa-bluez5.so bluez5.auto-connect лежит в
+    # контексте api.bluez5.device рядом с bluez5.hw-volume, что это и
+    # подтверждает. В monitor.bluez.properties ключ просто игнорируется.
+    "monitor.bluez.rules" = [
+      {
+        matches = [ { "device.name" = "~bluez_card.*"; } ];
+        actions.update-props = {
+          # Поднимать A2DP, а не только гарнитурный профиль.
+          "bluez5.auto-connect" = [
+            "a2dp_sink"
+            "hfp_hf"
+          ];
+        };
+      }
+    ];
+
     "monitor.bluez.properties" = {
-      # Подключать A2DP, а не только гарнитурный профиль.
-      "bluez5.auto-connect" = [
-        "a2dp_sink"
-        "hfp_hf"
-      ];
+      # Эти ключи — наоборот, именно monitor-уровня: в libspa-bluez5.so они
+      # идут группой в контексте адаптерных quirks.
       "bluez5.roles" = [
         "a2dp_sink"
         "a2dp_source"
