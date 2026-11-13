@@ -162,6 +162,43 @@ in
           };
         };
 
+        # Никакого сна, затемнения и автоблокировки. Машина живёт на внешнем
+        # мониторе в discrete-режиме MUX, внутренняя панель убита kernel-
+        # параметром — это де-факто десктоп, который складывается. Засыпать ему
+        # незачем, а автоблокировка только мешает.
+        #
+        # "never" — валидное значение, не выдумка: тип опции idleTimeout это
+        # nullOr (either (enum ["never"]) (ints.between 30 600000)).
+        powerdevil =
+          let
+            noSleep = {
+              autoSuspend.action = "nothing";
+              # idleTimeoutWhenLocked здесь НЕ задаётся сознательно: модуль
+              # роняет сборку ассертом, если его указать вместе с
+              # idleTimeout = "never". Логично — настраивать нечего, экран
+              # не гаснет ни в каком состоянии.
+              turnOffDisplay.idleTimeout = "never";
+              dimDisplay.enable = false;
+              # Дублирует logind из hosts/tuf/default.nix, где лид уже
+              # игнорируется — но пусть и Plasma знает, чтобы не спорила.
+              whenLaptopLidClosed = "doNothing";
+              powerButtonAction = "showLogoutScreen";
+            };
+          in
+          {
+            AC = noSleep;
+            # На батарее тоже. Внезапный сон посреди работы раздражает сильнее,
+            # чем разряд, о котором всё равно предупредит индикатор.
+            battery = noSleep;
+            lowBattery = noSleep;
+          };
+
+        kscreenlocker = {
+          autoLock = false;
+          lockOnResume = false;
+          lockOnStartup = false;
+        };
+
         # ПЕРЕНОС, НЕ НОВЫЕ БИНДЫ. Это единственные рукотворные хоткеи на этой
         # машине: сверка всех 269 строк kglobalshortcutsrc поле-в-поле с
         # дефолтами дала ровно эти два отклонения. Объявляем, чтобы они жили в

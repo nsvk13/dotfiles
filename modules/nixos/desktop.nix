@@ -43,7 +43,64 @@
     pulse.enable = true;
   };
 
-  hardware.bluetooth.enable = true;
+  hardware.bluetooth = {
+    enable = true;
+    # Адаптер оказывался выключенным после загрузки — в bluedevilglobalrc
+    # лежала запись <адрес>_powered=false, и включать приходилось руками.
+    powerOnBoot = true;
+
+    # Без этого флага PipeWire 1.6 пишет в лог:
+    #   spa.bluez5: Using legacy bluez5 API for A2DP — only SBC will be
+    #   supported. Please upgrade bluez5.
+    # Experimental открывает новые интерфейсы org.bluez, через которые PipeWire
+    # умеет переключать кодеки A2DP. Без него AAC недоступен, даже если
+    # наушники его объявляют — G435 объявляет, codec 2 на одном из SEP.
+    settings.General.Experimental = true;
+  };
+
+  # Bluetooth-наушники подключались в гарнитурном профиле (headset-head-unit,
+  # кодек mSBC) — это моно 16 кГц для звонков, звук соответствующий. A2DP при
+  # этом существовал на уровне bluez (пять SEP с UUID 0000110b, кодеки SBC и
+  # AAC), но PipeWire не создавал для него профиль, и wireplumber писал:
+  #   Could not find valid non-headset profile, not switching
+  #
+  # Руками лечилось явным вызовом ConnectProfile по UUID A2DP Sink; настройки
+  # ниже делают это поведением по умолчанию. Проверялось на Logitech G435.
+  services.pipewire.wireplumber.extraConfig."51-bluez-prefer-a2dp" = {
+    "monitor.bluez.properties" = {
+      # Подключать A2DP, а не только гарнитурный профиль.
+      "bluez5.auto-connect" = [
+        "a2dp_sink"
+        "hfp_hf"
+      ];
+      "bluez5.roles" = [
+        "a2dp_sink"
+        "a2dp_source"
+        "hfp_hf"
+        "hfp_ag"
+        "hsp_hs"
+        "hsp_ag"
+      ];
+      # Порядок значим: PipeWire берёт первый, который поддержали наушники.
+      # sbc_xq — тот же SBC на повышенном битрейте, слышно заметно лучше.
+      "bluez5.codecs" = [
+        "aac"
+        "sbc_xq"
+        "sbc"
+      ];
+      "bluez5.enable-sbc-xq" = true;
+      "bluez5.enable-msbc" = true;
+      "bluez5.hfphsp-backend" = "native";
+    };
+
+    # Главное. По дефолту true: wireplumber уводит наушники в гарнитурный
+    # профиль, едва какое-нибудь приложение откроет микрофон, и музыка
+    # превращается в телефонный звонок. Микрофон здесь отдельный (fifine),
+    # так что гарнитурный профиль не нужен вовсе.
+    "wireplumber.settings" = {
+      "bluetooth.autoswitch-to-headset-profile" = false;
+    };
+  };
 
   fonts.packages = with pkgs; [
     inter # UI-шрифт Plasma и GTK; до этого был дефолтный Noto Sans 10
