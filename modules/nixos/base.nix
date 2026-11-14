@@ -15,6 +15,8 @@
         config.allowUnfree = true;
       };
     })
+    # Даёт pkgs.spotify-spotx (см. modules/nixos/applications.nix).
+    inputs.spotx-nix.overlays.default
   ];
 
   nix = {

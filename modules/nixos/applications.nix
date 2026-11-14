@@ -9,12 +9,27 @@
   # Вернуть: programs.amnezia-vpn.enable = true; но тогда держите NetBird
   # отключённым, пока пользуетесь Amnezia.
 
+  # Zed убран: стоял здесь с 16f2925, где им разблокировали установку вместо
+  # не собиравшегося vscode. Пакет vscode починен в home/nsvk13/programs/
+  # vscode.nix, так что запасной редактор больше не нужен.
+
+  # spotify-spotx вместо spotify: тот же клиент, но с вырезанной рекламой
+  # (overlay SpotX-Nix подключён в modules/nixos/base.nix). Дополнительные
+  # аргументы SpotX-Bash — через override, например:
+  #   (spotify-spotx.override { spotxArgs = [ "--hide" ]; })
+  #
+  # opencode берётся из unstable: в nixos-26.05 заморожен 1.15.10, в
+  # unstable — 2.2.5. Для CLI-агента разница принципиальная, релизы у него
+  # идут недельным темпом, а список провайдеров и моделей живёт в самом
+  # бинарнике. Переехать на stable, когда он там догонит мажор.
   environment.systemPackages = with pkgs; [
     wireguard-tools
-    zed-editor
     claude-code
+    unstable.opencode
     discord
     telegram-desktop
     slack
+    spotify-spotx
+    obsidian
   ];
 }

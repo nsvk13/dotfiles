@@ -22,6 +22,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+
+    # Spotify без рекламы: SpotX-Bash накладывается при сборке derivation,
+    # существующий пакет в /nix/store не патчится (на NixOS он read-only, так
+    # что императивный spotx.sh тут неприменим в принципе).
+    #
+    # follows на наш nixpkgs безопасен: overlay берёт spotify из нашего pkgs
+    # (final.callPackage), свой nixos-unstable их флейку нужен только для
+    # собственных packages/checks, которые мы не используем.
+    spotx-nix = {
+      url = "github:SpotX-Official/SpotX-Nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

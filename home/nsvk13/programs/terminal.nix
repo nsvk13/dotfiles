@@ -11,7 +11,7 @@
 #
 # Konsole остаётся установленным как запасной и интегрированный с Plasma;
 # его профиль Nordic настроен в ../desktop/apps.nix.
-{ ... }:
+{ pkgs, ... }:
 
 {
   programs.ghostty = {
@@ -19,8 +19,31 @@
     enableZshIntegration = true;
 
     settings = {
-      # Тема Nord встроена в Ghostty (одна из 463), отдельный пакет не нужен.
-      theme = "Nord";
+      # Звук по завершении команды. Ghostty узнаёт о ней через OSC 133, которые
+      # ставит shell integration (включена строкой выше) — без неё не работает.
+      #
+      # unfocused, а не always: пикает только когда окно не в фокусе. То есть
+      # запустил `tofu apply` или долгий playbook, ушёл в браузер — вернёшься по
+      # звуку. При always звенело бы на каждый ls, и это выключишь через день.
+      notify-on-command-finish = "unfocused";
+      # bell — звук, notify — всплывашка Plasma. В дефолте notify выключен.
+      notify-on-command-finish-action = "bell,notify";
+
+      # Дефолт bell-features — no-system,no-audio, то есть тишина: Ghostty не
+      # звучит, пока звук не включат явно и не дадут файл. Системная тема звуков
+      # в Plasma не настроена, поэтому берём файл из пакета напрямую —
+      # заодно он попадает в зависимости генерации.
+      bell-features = "audio,attention,title";
+      bell-audio-path = "${pkgs.sound-theme-freedesktop}/share/sounds/freedesktop/stereo/complete.oga";
+      bell-audio-volume = 0.4;
+
+      # Тема встроена в Ghostty (одна из 463), отдельный пакет не нужен.
+      # Список — `ghostty +list-themes`, имя подставляется как есть.
+      #
+      # Kanagawa Wave вместо Nord: фон темнее (#1f1f28 против #2e3440), акценты
+      # приглушённее. Остальной риц пока на Nord (../desktop/nordic.nix, zellij
+      # в ./cli.nix, VS Code в ./vscode.nix) — терминал теперь из него выбивается.
+      theme = "Kanagawa Wave";
 
       font-family = "JetBrainsMono Nerd Font";
       font-size = 11;

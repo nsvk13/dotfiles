@@ -36,6 +36,14 @@
     dive
     lazydocker
 
+    # Сеть и DNS
+    dnsutils # dig: без него в системе вообще нечем сверить DNS,
+    # а `host` не умеет ни +short на произвольный тип, ни trace
+    termshark # TUI поверх tshark: разбор WireGuard-хендшейков и pcap
+    # в терминале, без выгрузки дампа в GUI Wireshark.
+    # Для ЗАХВАТА нужен dumpcap с setcap — см. programs.wireshark
+    # в modules/nixos/development.nix; чтение файлов работает и так
+
     # Infra & git
     opentofu
     ansible
