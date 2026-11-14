@@ -7,6 +7,7 @@
     ./programs/git.nix
     ./programs/devops.nix
     ./programs/cli.nix
+    ./programs/vscode.nix
     ./desktop/nordic.nix
   ];
 

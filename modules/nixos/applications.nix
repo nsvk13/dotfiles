@@ -9,9 +9,12 @@
   # Вернуть: programs.amnezia-vpn.enable = true; но тогда держите NetBird
   # отключённым, пока пользуетесь Amnezia.
 
+  # Zed убран: стоял здесь с 16f2925, где им разблокировали установку вместо
+  # не собиравшегося vscode. Пакет vscode починен в home/nsvk13/programs/
+  # vscode.nix, так что запасной редактор больше не нужен.
+
   environment.systemPackages = with pkgs; [
     wireguard-tools
-    zed-editor
     claude-code
     discord
     telegram-desktop
