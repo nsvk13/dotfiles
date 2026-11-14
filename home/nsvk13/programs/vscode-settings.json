@@ -46,5 +46,6 @@
   "git.autofetch": true,
   "git.confirmSync": false,
   "workbench.colorTheme": "Visual Studio Dark",
-  "workbench.iconTheme": "material-icon-theme"
+  "workbench.iconTheme": "material-icon-theme",
+  "explorer.confirmDelete": false
 }
