@@ -63,7 +63,21 @@
       gtk-tabs-location = "top";
 
       cursor-style = "bar";
+      # "clipboard", а не true: true пишет выделение только в PRIMARY, и тогда
+      # ctrl+shift+v (который читает CLIPBOARD) отдаёт не то, что выделено.
+      # Со "clipboard" выделение ложится в оба буфера — выделил и сразу вставляй.
       copy-on-select = "clipboard";
+
+      # Все три способа вставки читают ОДИН буфер — CLIPBOARD. В дефолте
+      # shift+insert ходил в PRIMARY, а ctrl+v вообще не был вставкой (терминал
+      # отдавал ^V — literal-next в readline), отсюда и "вставляется старое".
+      #
+      # Цена: ^V как literal-next больше не набрать этим сочетанием. В обмен на
+      # то, что вставка ведёт себя одинаково здесь и в любом GUI-приложении.
+      keybind = [
+        "ctrl+v=paste_from_clipboard"
+        "shift+insert=paste_from_clipboard"
+      ];
 
       # Не переспрашивать при закрытии вкладки, где ничего не выполняется.
       confirm-close-surface = false;
