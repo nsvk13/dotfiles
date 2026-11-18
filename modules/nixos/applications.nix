@@ -27,9 +27,21 @@
     claude-code
     unstable.opencode
     discord
+    # Два клиента Telegram намеренно. ayugram-desktop — форк с Ghost mode
+    # (не отмечать прочитанным, не слать «печатает»), расширенной
+    # кастомизацией и локальным хранением удалённых сообщений.
+    #
+    # Версия одна и та же в 26.05 и unstable (7.2.9), так что оверлей не нужен.
+    #
+    # telegram-desktop оставлен: у форков Telegram регулярно случаются
+    # блокировки API-ключа, и в такой день нужен рабочий запасной клиент.
+    # Данные у них раздельные — ~/.local/share/AyuGram против
+    # ~/.local/share/TelegramDesktop, сессии друг другу не мешают.
+    ayugram-desktop
     telegram-desktop
     slack
     spotify-spotx
     obsidian
+    burpsuite
   ];
 }
