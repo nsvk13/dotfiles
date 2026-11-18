@@ -235,12 +235,31 @@ in
             # с Electron-клиентами, а у нас NIXOS_OZONE_WL=1.
             translucency.enable = true;
 
-            windowOpenClose.animation = "scale";
-            minimization.animation = "squash";
+            # Анимации окон выключены.
+            #
+            # Было: windowOpenClose = "scale", minimization = "squash". Squash
+            # схлопывает окно в полоску к панели, и на 165 Гц это читается как
+            # рывок, а не как плавность. Плюс оба эффекта добавляют задержку
+            # между кликом и реакцией — окно уже «сворачивается», а работать с
+            # ним ещё нельзя.
+            #
+            # "off" — валидное значение обоих enum, проверено по kwin.nix:
+            # windowOpenClose принимает fade|glide|scale|off,
+            # minimization — squash|magiclamp|off.
+            windowOpenClose.animation = "off";
+            minimization.animation = "off";
+
+            # Переключение столов оставлено: оно происходит по явной команде,
+            # а не на каждый клик, и помогает понять, куда уехал экран.
             desktopSwitching.animation = "slide";
           };
 
-          borderlessMaximizedWindows = true;
+          # false: развёрнутые окна сохраняют титулбар.
+          #
+          # При true он пропадал, и закрыть окно мышью было нечем — под это
+          # в панель ставился виджет application-title-bar с чужими кнопками.
+          # Убрано и то, и другое: кнопки должны быть на окне, а не в панели.
+          borderlessMaximizedWindows = false;
 
           # Барьеры на краях мешают при одном широком мониторе.
           edgeBarrier = 0;
@@ -250,43 +269,15 @@ in
         configFile."kwinrc" = {
           "Plugins".contrastEnabled = true;
 
-          # Автоматический тайлинг с зазорами — тот самый вид «идеально
-          # разложенных окон». У Plasma есть и свой тайлинг на Meta+T, но он
-          # ручной: раскладку надо рисовать самому. krohnkite раскладывает сам.
+          # ТАЙЛИНГ ВЫКЛЮЧЕН. Был krohnkite с зазорами 8 px — выглядел
+          # аккуратно на скриншоте, но на деле мешал: окна разъезжаются сами,
+          # перетащить и положить куда хочется нельзя, каждое новое окно
+          # перекраивает раскладку остальных.
           #
-          # Пакет ставится системно в modules/nixos/desktop.nix: KWin ищет
-          # скрипты в share/kwin/scripts внутри XDG_DATA_DIRS.
-          "Plugins".krohnkiteEnabled = true;
-
-          "Script-krohnkite" = {
-            # Зазоры. Верхняя панель с hiding = "none" резервирует место сама,
-            # так что 8 сверху — это отступ уже под ней. Нижний док в режиме
-            # dodgewindows место не резервирует, но и уходит при подходе окна,
-            # поэтому снизу тоже 8.
-            screenGapTop = 8;
-            screenGapBottom = 8;
-            screenGapLeft = 8;
-            screenGapRight = 8;
-            screenGapBetween = 8;
-
-            # Одно окно на экране растягивается без зазоров — чтобы работа в
-            # одном окне не теряла площадь на рамки.
-            soleWindowNoGaps = true;
-
-            # Раскладки: по умолчанию обычный tile, остальные доступны
-            # переключением. Monocle = одно окно на весь экран поверх прочих.
-            tileLayoutOrder = 1;
-            monocleLayoutOrder = 2;
-            threeColumnLayoutOrder = 3;
-            floatingLayoutOrder = 4;
-
-            # Не тайлить то, что тайлить нельзя: диалоги настроек, выбор
-            # файлов, всплывающие окна Plasma. Иначе окно настроек растянется
-            # на половину экрана.
-            ignoreClass = "krunner,yakuake,spectacle,kded6,xwaylandvideobridge,plasmashell,org.kde.plasmashell,org.kde.polkit-kde-authentication-agent-1,org.kde.kruler,kruler";
-            floatUtility = true;
-            ignoreRole = "quake";
-          };
+          # false, а не удаление ключа: если просто убрать строку, в kwinrc
+          # останется krohnkiteEnabled=true с прошлой генерации — plasma-manager
+          # при overrideConfig = false ничего не удаляет, только дописывает.
+          "Plugins".krohnkiteEnabled = false;
         };
       };
     }

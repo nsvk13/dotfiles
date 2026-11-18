@@ -145,7 +145,9 @@
     # KWin-скрипт автоматического тайлинга. Включается и настраивается в
     # home/nsvk13/desktop/nordic.nix через kwinrc; здесь только пакет, чтобы
     # KWin нашёл его в share/kwin/scripts внутри XDG_DATA_DIRS.
-    kdePackages.krohnkite
+    # krohnkite (автоматический тайлинг) убран — см. nordic.nix. Выглядел
+    # хорошо, работать мешал: окна разъезжались сами и не давали положить
+    # их туда, куда нужно.
   ];
 
   programs.firefox.enable = true;

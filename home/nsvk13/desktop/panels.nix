@@ -66,38 +66,16 @@
         # Имеет смысл только потому, что в nordic.nix заведено 4 рабочих стола.
         "org.kde.plasma.pager"
 
-        # Заголовок активного окна и кнопки управления прямо в панели. Это
-        # закрывает дыру от borderlessMaximizedWindows = true в nordic.nix:
-        # у развёрнутых окон нет титулбара, и закрыть их мышью было нечем.
-        # Пакет application-title-bar plasma-manager ставит сам.
-        {
-          applicationTitleBar = {
-            behavior.activeTaskSource = "activeTask";
-            layout = {
-              # Кнопки перечисляются по одной — группы "windowControlButtons"
-              # в этом enum нет, она описывает только их оформление ниже.
-              elements = [
-                "windowIcon"
-                "windowTitle"
-                "windowMinimizeButton"
-                "windowMaximizeButton"
-                "windowCloseButton"
-              ];
-              horizontalAlignment = "left";
-              verticalAlignment = "center";
-              showDisabledElements = "deactivated";
-            };
-            windowTitle = {
-              source = "appName";
-              hideEmptyTitle = true;
-              font = {
-                bold = false;
-                fit = "fixedSize";
-                size = 10;
-              };
-            };
-          };
-        }
+        # ЗАГОЛОВОК ОКНА С КНОПКАМИ В ПАНЕЛИ УБРАН (application-title-bar).
+        #
+        # Он ставился как заплатка под borderlessMaximizedWindows: у развёрнутых
+        # окон нет титулбара, и закрыть их мышью было нечем. Но лечил симптом
+        # хуже болезни — непонятная полоса с именем приложения и чужими
+        # кнопками там, где её не ждёшь.
+        #
+        # Правильное лечение — сама причина: borderlessMaximizedWindows в
+        # nordic.nix выключен, титулбар вернулся на место, кнопки снова там,
+        # где им и положено быть — на окне.
 
         # Таскбар с лончерами — переехал сюда из удалённого нижнего дока.
         # iconsOnly: только иконки, без подписей, чтобы панель не разъезжалась.
